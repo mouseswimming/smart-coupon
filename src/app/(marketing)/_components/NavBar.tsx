@@ -12,7 +12,7 @@ export default function NavBar() {
         <Link href="#" className="text-lg">
           Features
         </Link>
-        <Link href="#" className="text-lg">
+        <Link href="#pricing" className="text-lg">
           Pricing
         </Link>
         <Link href="#" className="text-lg">
@@ -24,7 +24,7 @@ export default function NavBar() {
         */}
         <span className="text-lg">
           <SignedIn>
-            <Link href="#">Dashboard</Link>
+            <Link href="/dashboard">Dashboard</Link>
           </SignedIn>
           <SignedOut>
             <SignInButton>Login</SignInButton>
