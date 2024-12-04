@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { productDetailsSchema } from "@/schemas/products";
+import { createProduct } from "@/server/actions/product";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProductDetailsForm() {
   // the form has type from productDetailsSchema
@@ -29,8 +31,16 @@ export default function ProductDetailsForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof productDetailsSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof productDetailsSchema>) {
+    const data = await createProduct(values);
+
+    if (data?.message) {
+      toast({
+        title: data.error ? "Error" : "Success",
+        description: data.message,
+        variant: data.error ? "destructive" : "default",
+      });
+    }
   }
 
   return (

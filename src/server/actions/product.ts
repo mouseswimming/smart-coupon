@@ -7,12 +7,11 @@ import { createProduct as createProductDB } from "@/server/db/products";
 import { redirect } from "next/navigation";
 
 /* 
-  call function from client to server in a secure and safe way
+  we need to define our return here since it can return a promise or undefined, it we hit the redirect block
 */
-
 export async function createProduct(
   unsafeData: z.infer<typeof productDetailsSchema>
-) {
+): Promise<{ error: boolean; message: string } | undefined> {
   const { userId } = await auth();
   const { success, data } = productDetailsSchema.safeParse(unsafeData);
 
