@@ -4,6 +4,7 @@ import { NoProducts } from "./_component/NoProducts";
 import { ArrowRightIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import ProductGrid from "./_component/ProductGrid";
 
 export default async function DashboardPage() {
   const { userId, redirectToSignIn } = await auth();
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
           </Link>
         </Button>
       </div>
+      <ProductGrid products={products} />
     </>
   );
 }
