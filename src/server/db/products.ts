@@ -1,20 +1,26 @@
 import { db } from "@/db";
 import { ProductCustomizationTable, ProductTable } from "@/db/schema";
+import {
+  CACTH_TAGS,
+  dbCache,
+  getUserTag,
+  revalidateDbCache,
+} from "@/lib/cache";
 import { and, eq } from "drizzle-orm";
 
 export function getProducts(userId: string, { limit }: { limit?: number }) {
-  return db.query.ProductTable.findMany({
-    where: ({ clerkUserId }, { eq }) => eq(clerkUserId, userId),
-    orderBy: ({ createdAt }, { desc }) => desc(createdAt),
-    limit,
+  const cacheFn = dbCache(getProductsInternal, {
+    tags: [getUserTag(userId, CACTH_TAGS.products)],
   });
+
+  return cacheFn(userId, { limit });
 }
 
 export async function createProduct(data: typeof ProductTable.$inferInsert) {
   const [newProduct] = await db
     .insert(ProductTable)
     .values(data)
-    .returning({ id: ProductTable.id });
+    .returning({ id: ProductTable.id, userId: ProductTable.clerkUserId });
 
   try {
     await db
@@ -31,6 +37,12 @@ export async function createProduct(data: typeof ProductTable.$inferInsert) {
     console.error(e);
   }
 
+  revalidateDbCache({
+    tag: CACTH_TAGS.products,
+    userId: newProduct.userId,
+    id: newProduct.id,
+  });
+
   return newProduct;
 }
 
@@ -45,6 +57,25 @@ export async function deleteProduct({
     .delete(ProductTable)
     .where(and(eq(ProductTable.id, id), eq(ProductTable.clerkUserId, userId)));
 
+  if (rowCount > 0) {
+    revalidateDbCache({
+      tag: CACTH_TAGS.products,
+      userId,
+      id,
+    });
+  }
+
   // when row count > 0, it means we delete successfully
   return rowCount > 0;
+}
+
+/* 
+  Every time, when we get anything from db, we will create the inner function to do the db call. And our accessible function will first check cache, if cache is not there than call the inner function. 
+*/
+function getProductsInternal(userId: string, { limit }: { limit?: number }) {
+  return db.query.ProductTable.findMany({
+    where: ({ clerkUserId }, { eq }) => eq(clerkUserId, userId),
+    orderBy: ({ createdAt }, { desc }) => desc(createdAt),
+    limit,
+  });
 }
